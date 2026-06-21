@@ -1,0 +1,30 @@
+{
+    "WDL TFR\nUPI/DR/123870829873/PHARMAC\nT/HDFC/PHARMACTIV/UPI\n0097694162092 AT 12372\nNAGARUKHRA": {
+        "clean_name": "Upi\n0097694162092 At 12372\nNagarukhra",
+        "category": "Healthcare"
+    },
+    "WDL TFR\nUPI/DR/627574367862/INDIAN\nR/SBIN/BDPG2.IRUT/PAYM\n0097693162093 AT 12372\nNAGARUKHRA": {
+        "clean_name": "Paym\n0097693162093 At 12372\nNagarukhra",
+        "category": "Transfers"
+    },
+    "WDL TFR\nUPI/DR/609244492032/INDIAN\nR/SBIN/RAILSBIUPI/UPI\n0097693162093 AT 12372\nNAGARUKHRA": {
+        "clean_name": "Upi\n0097693162093 At 12372\nNagarukhra",
+        "category": "Transportation"
+    },
+    "WDL TFR\nUPI/DR/670676761352/INDIAN\nR/SBIN/RAILSBIUPI/PAYM\n0097695162091 AT 12372\nNAGARUKHRA": {
+        "clean_name": "Paym\n0097695162091 At 12372\nNagarukhra",
+        "category": "Transportation"
+    },
+    "WDL TFR\nUPI/DR/103142722717/APPLE\nSE/HDFC/BILLDESKPG/APPL\n0097690162095 AT 12372\nNAGARUKHRA": {
+        "clean_name": "Appl\n0097690162095 At 12372\nNagarukhra",
+        "category": "Utilities & Telecom"
+    },
+    "WDL TFR\nUPI/DR/611349864595/SMART\nSN/UTIB/GPAY-12189/UPI\n0097693162093 AT 12372\nNAGARUKHRA": {
+        "clean_name": "Upi\n0097693162093 At 12372\nNagarukhra",
+        "category": "Shopping"
+    },
+    "WDL TFR\nUPI/DR/611349922441/SMART\nSN/UTIB/GPAY-12189/UPI\n0097693162093 AT 12372\nNAGARUKHRA": {
+        "clean_name": "Upi\n0097693162093 At 12372\nNagarukhra",
+        "category": "Shopping"
+    }
+}

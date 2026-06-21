@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  engine:
+    build:
+      context: ./engine
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./engine:/app
+    environment:
+      - ENV=development
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - engine
+    restart: always

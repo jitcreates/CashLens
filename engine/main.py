@@ -1,6 +1,7 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+from app.analytics.trend_engine import TrendAnalyzer
 from app.processors.parsers import get_parser
 from app.processors.cleaner.merchant_matcher import MerchantMatcher
 from app.processors.classifier.category_engine import CategoryEngine
@@ -17,13 +18,14 @@ app = FastAPI()
 # Enable CORS for communication with the Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow absolutely everything for local testing
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize Core Engines
+# Initializations of Core Engines
+trend_analyzer = TrendAnalyzer()
 merchant_matcher = MerchantMatcher()
 category_engine = CategoryEngine()
 leak_detector = LeakDetector()
@@ -33,8 +35,8 @@ behavioral_engine = BehavioralAnalytics()
 insight_engine = InsightEngine()
 story_generator = FinancialStoryGenerator()
 
-@app.post("/api/analyze", response_model=AnalysisResponse)
-async def analyze_statement(file: UploadFile = File(...)):
+@app.post("/api/analyze")
+async def analyze_statement(file: UploadFile = File(...), tenure: str = Form("1")):
     filename = file.filename
     if not filename:
         raise HTTPException(status_code=400, detail="Invalid uploaded file structure.")
@@ -72,19 +74,20 @@ async def analyze_statement(file: UploadFile = File(...)):
     health_data = health_score_engine.calculate(processed_transactions, leaks_data["subscription_summary"])
     dna_data = spending_dna_engine.determine_profile(processed_transactions)
     behavior_data = behavioral_engine.analyze_patterns(processed_transactions)
-    
+    trend_data= trend_analyzer.analyze(processed_transactions, tenure)
     # Generate contextual narratives
     generated_insights = insight_engine.generate_insights(health_data, behavior_data, leaks_data)
     story_narrative = story_generator.compile_narrative(health_data, dna_data, behavior_data, leaks_data)
 
     return {
         "status": "success",
-        "message": "Statement analyzed successfully.",
+        "message": f"{tenure}-Month Statement analyzed successfully.",
         "data": {
-            "transactions": processed_transactions, # Check note below if this stays underlined!
+            "transactions": processed_transactions,
             "health_score": health_data,
             "spending_dna": dna_data,
             "behavioral_analytics": behavior_data,
+            "trends": trend_data, 
             "insights": generated_insights,
             "financial_story": story_narrative
         }

@@ -20,8 +20,6 @@ const formatINR = (amount: number) => {
 
 export default function Dashboard() {
   const [report, setReport] = useState<any>(null);
-  
-  // --- NEW: State to control the Ledger Dropdown ---
   const [isLedgerOpen, setIsLedgerOpen] = useState(false);
 
   useEffect(() => {
@@ -42,7 +40,8 @@ export default function Dashboard() {
     );
   }
 
-  const { health_score, spending_dna, financial_story, transactions } = report;
+  // --- NEW: Added behavioral_analytics to the destructuring ---
+  const { health_score, spending_dna, behavioral_analytics, financial_story, transactions } = report;
 
   const expenses = transactions.filter((t: any) => t.type === 'debit');
   const totalInflow = transactions.filter((t: any) => t.type === 'credit').reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0);
@@ -67,6 +66,11 @@ export default function Dashboard() {
   const displayArchetype = (spending_dna?.archetype && spending_dna.archetype !== "Unknown") 
     ? spending_dna.archetype 
     : (health_score?.overall_score >= 65 ? "The Pragmatist" : "The Consumer");
+
+  // Safely grab the weekend multiplier, fallback to 1.0 if not found
+  const weekendMultiplier = behavioral_analytics?.weekend_velocity_multiplier 
+    || behavioral_analytics?.weekend_multiplier 
+    || "1.0";
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans selection:bg-zinc-200 pb-24 text-zinc-900">
@@ -142,26 +146,28 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-zinc-200 shadow-sm hover:border-zinc-300 transition-colors">
-            <h3 className="text-zinc-800 text-sm font-semibold mb-6 flex items-center gap-2">
-              <LayoutGrid className="w-4 h-4 text-zinc-500" /> Structural Ratios
-            </h3>
-            <div className="mb-6">
-              <div className="flex justify-between text-sm font-semibold text-zinc-800 mb-2">
-                <span>Cash Flow Margin</span>
-                <span>{health_score?.breakdown?.cash_flow_strength || 0}%</span>
+          <div className="bg-white rounded-xl p-6 border border-zinc-200 shadow-sm hover:border-zinc-300 transition-colors flex flex-col justify-between">
+            <div>
+              <h3 className="text-zinc-800 text-sm font-semibold mb-6 flex items-center gap-2">
+                <LayoutGrid className="w-4 h-4 text-zinc-500" /> Structural Ratios
+              </h3>
+              <div className="mb-6">
+                <div className="flex justify-between text-sm font-semibold text-zinc-800 mb-2">
+                  <span>Cash Flow Margin</span>
+                  <span>{health_score?.breakdown?.cash_flow_strength || 0}%</span>
+                </div>
+                <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200/50">
+                  <div className="h-full bg-emerald-500" style={{ width: `${health_score?.breakdown?.cash_flow_strength || 0}%` }}></div>
+                </div>
               </div>
-              <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200/50">
-                <div className="h-full bg-emerald-500" style={{ width: `${health_score?.breakdown?.cash_flow_strength || 0}%` }}></div>
-              </div>
-            </div>
-            <div className="mb-6">
-              <div className="flex justify-between text-sm font-semibold text-zinc-800 mb-2">
-                <span>Saving Discipline</span>
-                <span>{health_score?.breakdown?.saving_discipline || 0}%</span>
-              </div>
-              <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200/50">
-                <div className="h-full bg-zinc-900" style={{ width: `${health_score?.breakdown?.saving_discipline || 0}%` }}></div>
+              <div className="mb-6">
+                <div className="flex justify-between text-sm font-semibold text-zinc-800 mb-2">
+                  <span>Saving Discipline</span>
+                  <span>{health_score?.breakdown?.saving_discipline || 0}%</span>
+                </div>
+                <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200/50">
+                  <div className="h-full bg-zinc-900" style={{ width: `${health_score?.breakdown?.saving_discipline || 0}%` }}></div>
+                </div>
               </div>
             </div>
             <div className="pt-4 border-t border-zinc-200 flex justify-between items-center">
@@ -172,14 +178,21 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* --- THE FIX: Weekend Velocity Multiplier injected below Archetype --- */}
           <div className="bg-white rounded-xl p-6 border border-zinc-200 shadow-sm flex flex-col hover:border-zinc-300 transition-colors">
             <h3 className="text-zinc-800 text-sm font-semibold mb-6 flex items-center gap-2">
               <Shield className="w-4 h-4 text-zinc-500" /> Behavioral Profile
             </h3>
             <div className="text-3xl font-bold text-zinc-950 mb-3 tracking-tight">{displayArchetype}</div>
-            <p className="text-base text-zinc-700 leading-relaxed flex-grow font-medium">
+            <p className="text-sm text-zinc-600 leading-relaxed flex-grow font-medium">
               Based on the density and trajectory of your capital outflows, your financial DNA indicates a highly structured methodology to asset allocation.
             </p>
+            <div className="pt-4 mt-4 border-t border-zinc-200 flex justify-between items-center">
+               <span className="text-sm font-semibold text-zinc-600">Weekend Velocity</span>
+               <span className="text-lg font-bold tracking-tight text-zinc-950">
+                 {weekendMultiplier}x
+               </span>
+            </div>
           </div>
 
         </div>
@@ -237,10 +250,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* --- THE DROPDOWN LEDGER FIX --- */}
         <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden transition-all duration-300">
           
-          {/* Clickable Header Area */}
           <button 
             onClick={() => setIsLedgerOpen(!isLedgerOpen)}
             className="w-full bg-zinc-50 p-6 flex justify-between items-center hover:bg-zinc-100 transition-colors outline-none"
@@ -259,7 +270,6 @@ export default function Dashboard() {
              </div>
           </button>
           
-          {/* Conditionally Rendered Table */}
           {isLedgerOpen && (
             <div className="border-t border-zinc-200 overflow-x-auto">
               <table className="w-full text-left border-collapse">

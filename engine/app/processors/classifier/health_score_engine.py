@@ -39,39 +39,44 @@ class HealthScoreEngine:
 
         safe_income = total_income if total_income > 0 else 1.0
 
-        # --- THE FIX: LIQUIDITY RETENTION LOGIC ---
-        # If the user's inflows are strictly greater than their total outflows, 
-        # the leftover money sitting in the bank is mathematically considered "Saved Cash".
-        retained_cash = max(0, total_income - total_outflow)
+        # --- HIGH-LEVEL ALGORITHMIC MATH ---
         
-        # Total True Savings = explicitly invested money + unspent bank cash
-        total_true_savings = allocated_savings + retained_cash
+        # 1. Soft-Penalty Savings Discipline
+        liquid_retention = max(0, total_income - total_outflow)
+        liquidity_deficit = max(0, total_outflow - total_income)
         
-        # 1. Balanced Saving Discipline 
-        # We consider saving 20% of your income to be a perfect 100/100 score.
-        savings_ratio = total_true_savings / safe_income
-        saving_discipline = max(0, min(100, int((savings_ratio / 0.20) * 100)))
-
-        # 2. Balanced Cash Flow Strength
-        expense_ratio = true_expenses / safe_income
-        if expense_ratio > 1.2: 
-            cash_flow_strength = 20 # Floor
+        if liquidity_deficit > 0:
+            # If they ran a deficit, we don't zero out their FD investments immediately.
+            # We apply a 40% "burn penalty" against their explicit savings.
+            effective_savings = max(0, allocated_savings - (liquidity_deficit * 0.40))
         else:
-            cash_flow_strength = max(20, min(100, int((1.0 - (expense_ratio * 0.75)) * 100)))
+            # If they stayed green, they get credit for investments + leftover cash.
+            effective_savings = allocated_savings + liquid_retention
 
-        # 3. Dynamic Spending Stability
-        spending_stability = max(40, cash_flow_strength - 10)
+        # Grade against a strict 35% target ratio
+        savings_ratio = effective_savings / safe_income
+        saving_discipline = max(0, min(100, int((savings_ratio / 0.35) * 100)))
 
-        # 4. Financial Resilience
-        financial_resilience = int((cash_flow_strength * 0.6) + (saving_discipline * 0.4))
+        # 2. Dynamic Cash Flow Strength (Smoothed Curve, No Cliffs)
+        expense_ratio = true_expenses / safe_income
+        
+        # If expense ratio is 0.3 (spent 30%), score caps at 100.
+        # If expense ratio is 0.8 (spent 80%), score is 50.
+        # If expense ratio is > 1.25 (spent 125%), score hits the floor of 5.
+        cash_flow_strength = max(5, min(100, int((1.3 - expense_ratio) * 100)))
 
-        # Final Weighted Score
+        # 3. Stability & Resilience
+        spending_stability = max(30, cash_flow_strength - 10)
+        financial_resilience = int((cash_flow_strength * 0.5) + (saving_discipline * 0.5))
+
+        # 4. Final Weighted Score
         overall_score = int(
-            (cash_flow_strength * 0.40) + 
-            (saving_discipline * 0.35) + 
+            (cash_flow_strength * 0.35) + 
+            (saving_discipline * 0.40) + 
             (financial_resilience * 0.25)
         )
 
+        # Institutional Grading Curve
         if overall_score >= 90: grade = "A"
         elif overall_score >= 75: grade = "B"
         elif overall_score >= 60: grade = "C"
